@@ -38,3 +38,14 @@
 4. Discussed individual team member roles for the presentation.
 
 ---
+
+## 📅 Meeting 3 - 07/20/2025
+**Attendees:** Senthil Mariappan, Emmanuel Opoku, Elizabeth Setjawardaja, Ajay Gopalakrishnan
+
+### Agenda & Discussion:
+1. Reviewed all deliverables.
+2. Went through the checklist of all the deliverables, as a team.
+3. Recorded the presentation.
+4. Worked on a timeline for the next lab and assignment 
+
+---
