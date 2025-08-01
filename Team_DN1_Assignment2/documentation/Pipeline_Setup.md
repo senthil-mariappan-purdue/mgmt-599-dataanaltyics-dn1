@@ -1,133 +1,107 @@
-{
-  "nbformat": 4,
-  "nbformat_minor": 0,
-  "metadata": {
-    "colab": {
-      "provenance": []
-    },
-    "kernelspec": {
-      "name": "python3",
-      "display_name": "Python 3"
-    },
-    "language_info": {
-      "name": "python"
-    }
-  },
-  "cells": [
-    {
-      "cell_type": "markdown",
-      "source": [
-        "# Dataflow Pipeline Setup: Sales Data Processing\n",
-        "\n",
-        "This document outlines the setup for the Dataflow pipeline designed to process sales data, read from a CSV file in Google Cloud Storage (GCS), transform it, and write it to BigQuery.\n",
-        "\n",
-        "## Pipeline Description\n",
-        "\n",
-        "The pipeline performs the following steps:\n",
-        "\n",
-        "1.  **ReadFromGCS:** Reads a CSV file from a specified GCS bucket.\n",
-        "2.  **ParseCSV:** Parses each line of the CSV file into a list of values.\n",
-        "3.  **FilterNulls:** Filters out any null or empty rows that result from parsing.\n",
-        "4.  **TransformDate:** Transforms the data by converting data types and extracting relevant fields. Specifically, it converts the date string to a `datetime.date` object.\n",
-        "5.  **WriteToBigQuery:** Writes the transformed data to a BigQuery table.\n",
-        "\n",
-        "## Code Snippet\n",
-        "\n",
-        "Here's the core pipeline definition in Python:\n",
-        "\n",
-        "```python\n",
-        "import apache_beam as beam\n",
-        "from apache_beam.options.pipeline_options import PipelineOptions\n",
-        "import csv\n",
-        "from datetime import datetime\n",
-        "\n",
-        "\n",
-        "def parse_csv(line):\n",
-        "    try:\n",
-        "        return next(csv.reader([line]))\n",
-        "    except Exception:\n",
-        "        return None\n",
-        "\n",
-        "def run():\n",
-        "    options = PipelineOptions(\n",
-        "        runner='DataflowRunner',\n",
-        "        project='mgmt599-dn1-lab2',\n",
-        "        region='us-central1',\n",
-        "        temp_location='gs://mgmt599-dn1-lab2-datalake/pipeline_temp',\n",
-        "        staging_location='gs://mgmt599-dn1-lab2-datalake/pipeline_staging',\n",
-        "        save_main_session=True\n",
-        "    )\n",
-        "\n",
-        "    with beam.Pipeline(options=options) as pipeline:\n",
-        "        (\n",
-        "            pipeline\n",
-        "            | 'ReadFromGCS' >> beam.io.ReadFromText(\n",
-        "                'gs://mgmt599-dn1-lab2-datalake/train.csv', skip_header_lines=1)\n",
-        "            | 'ParseCSV' >> beam.Map(parse_csv)\n",
-        "            | 'FilterNulls' >> beam.Filter(lambda x: x is not None)\n",
-        "            | 'TransformDate' >> beam.Map(lambda record: {\n",
-        "                'ID': int(record[0]),\n",
-        "                'Date': datetime.strptime(record[1], '%Y-%m-%d').date() if record[1] else None,\n",
-        "                'StoreNumber': int(record[2]),\n",
-        "                'Family': str(record[3]),\n",
-        "                'Sales': float(record[4]) if record[4] else None,\n",
-        "                'Onpromotion': int(record[5])\n",
-        "            }\n",
-        "        )\n",
-        "\n",
-        "\n",
-        "            \n",
-        "            | 'WriteToBigQuery' >> beam.io.WriteToBigQuery(\n",
-        "                'mgmt599-dn1-lab2.store_sales_team_dn1.sales_data',\n",
-        "                schema='ID:INTEGER, Date:DATE, StoreNumber:INTEGER, Family:STRING, Sales:FLOAT, Onpromotion:INTEGER',\n",
-        "                write_disposition=beam.io.BigQueryDisposition.WRITE_TRUNCATE,\n",
-        "                create_disposition=beam.io.BigQueryDisposition.CREATE_IF_NEEDED\n",
-        "            )\n",
-        "        )\n",
-        "\n",
-        "if __name__ == '__main__':\n",
-        "    run()\n",
-        "```\n",
-        "\n",
-        "## Configuration\n",
-        "\n",
-        "The following configurations are used in the pipeline:\n",
-        "\n",
-        "*   **Runner:** `DataflowRunner` - Specifies that the pipeline will be executed using the Dataflow service.\n",
-        "*   **Project:** `mgmt599-dn1-lab2` -  GCP project ID.\n",
-        "*   **Region:** `us-central1` - GCP region where the Dataflow job will run.\n",
-        "*   **temp_location:** `gs://mgmt599-dn1-lab2-datalake/pipeline_temp` - GCS path for temporary files.\n",
-        "*   **staging_location:** `gs://mgmt599-dn1-lab2-datalake/pipeline_staging` - GCS path for staging the pipeline.\n",
-        "*   **Input File:** `gs://mgmt599-dn1-lab2-datalake/train.csv` - The GCS path to the input CSV file.\n",
-        "*   **BigQuery Table:** `mgmt599-dn1-lab2.store_sales_team_dn1.sales_data` - The BigQuery table where the transformed data will be written.\n",
-        "*   **BigQuery Schema:** `ID:INTEGER, Date:DATE, StoreNumber:INTEGER, Family:STRING, Sales:FLOAT, Onpromotion:INTEGER` - The schema for the BigQuery table.\n",
-        "\n",
-        "## Data Transformation Details\n",
-        "\n",
-        "The `TransformDate` step converts the date string from the input CSV file to a BigQuery-compatible DATE format. It also handles potential missing values in the `Sales` column by setting them to `None` if they are empty.\n",
-        "\n",
-        "## Error Handling\n",
-        "\n",
-        "The `parse_csv` function includes a try-except block to handle potential errors during CSV parsing.  Rows that cannot be parsed are skipped.\n",
-        "\n",
-        "## Dependencies\n",
-        "\n",
-        "The pipeline relies on the following Apache Beam libraries:\n",
-        "\n",
-        "*   `apache_beam`\n",
-        "*   `apache_beam.options.pipeline_options`\n",
-        "\n",
-        "It also uses the standard `csv` and `datetime` libraries in Python.\n",
-        "\n",
-        "## Notes\n",
-        "\n",
-        "*   Ensure that the GCS bucket and BigQuery dataset exist before running the pipeline.\n",
-        "*   The BigQuery table will be truncated and overwritten each time the pipeline runs due to the `WRITE_TRUNCATE` write disposition.  Consider changing this to `WRITE_APPEND` for incremental updates.\n",
-        "*   The pipeline assumes that the input CSV file has a header row, which is skipped using the `skip_header_lines=1` option."
-      ],
-      "metadata": {
-        "id": "McBuzk18JbpQ"
-      }
-    }
-  ]
-}
+# Dataflow Pipeline Setup: Sales Data Processing
+
+This document outlines the setup for the Dataflow pipeline designed to process sales data, read from a CSV file in Google Cloud Storage (GCS), transform it, and write it to BigQuery.
+
+## Pipeline Description
+
+The pipeline performs the following steps:
+
+1.  **ReadFromGCS:** Reads a CSV file from a specified GCS bucket.
+2.  **ParseCSV:** Parses each line of the CSV file into a list of values.
+3.  **FilterNulls:** Filters out any null or empty rows that result from parsing.
+4.  **TransformDate:** Transforms the data by converting data types and extracting relevant fields. Specifically, it converts the date string to a `datetime.date` object.
+5.  **WriteToBigQuery:** Writes the transformed data to a BigQuery table.
+
+## Code Snippet
+
+Here's the core pipeline definition in Python:
+
+```python
+import apache_beam as beam
+from apache_beam.options.pipeline_options import PipelineOptions
+import csv
+from datetime import datetime
+
+
+def parse_csv(line):
+    try:
+        return next(csv.reader([line]))
+    except Exception:
+        return None
+
+def run():
+    options = PipelineOptions(
+        runner='DataflowRunner',
+        project='mgmt599-dn1-lab2',
+        region='us-central1',
+        temp_location='gs://mgmt599-dn1-lab2-datalake/pipeline_temp',
+        staging_location='gs://mgmt599-dn1-lab2-datalake/pipeline_staging',
+        save_main_session=True
+    )
+
+    with beam.Pipeline(options=options) as pipeline:
+        (
+            pipeline
+            | 'ReadFromGCS' >> beam.io.ReadFromText(
+                'gs://mgmt599-dn1-lab2-datalake/train.csv', skip_header_lines=1)
+            | 'ParseCSV' >> beam.Map(parse_csv)
+            | 'FilterNulls' >> beam.Filter(lambda x: x is not None)
+            | 'TransformDate' >> beam.Map(lambda record: {
+                'ID': int(record[0]),
+                'Date': datetime.strptime(record[1], '%Y-%m-%d').date() if record[1] else None,
+                'StoreNumber': int(record[2]),
+                'Family': str(record[3]),
+                'Sales': float(record[4]) if record[4] else None,
+                'Onpromotion': int(record[5])
+            }
+        )
+
+
+            
+            | 'WriteToBigQuery' >> beam.io.WriteToBigQuery(
+                'mgmt599-dn1-lab2.store_sales_team_dn1.sales_data',
+                schema='ID:INTEGER, Date:DATE, StoreNumber:INTEGER, Family:STRING, Sales:FLOAT, Onpromotion:INTEGER',
+                write_disposition=beam.io.BigQueryDisposition.WRITE_TRUNCATE,
+                create_disposition=beam.io.BigQueryDisposition.CREATE_IF_NEEDED
+            )
+        )
+
+if __name__ == '__main__':
+    run()
+```
+
+## Configuration
+
+The following configurations are used in the pipeline:
+
+*   **Runner:** `DataflowRunner` - Specifies that the pipeline will be executed using the Dataflow service.
+*   **Project:** `mgmt599-dn1-lab2` -  GCP project ID.
+*   **Region:** `us-central1` - GCP region where the Dataflow job will run.
+*   **temp_location:** `gs://mgmt599-dn1-lab2-datalake/pipeline_temp` - GCS path for temporary files.
+*   **staging_location:** `gs://mgmt599-dn1-lab2-datalake/pipeline_staging` - GCS path for staging the pipeline.
+*   **Input File:** `gs://mgmt599-dn1-lab2-datalake/train.csv` - The GCS path to the input CSV file.
+*   **BigQuery Table:** `mgmt599-dn1-lab2.store_sales_team_dn1.sales_data` - The BigQuery table where the transformed data will be written.
+*   **BigQuery Schema:** `ID:INTEGER, Date:DATE, StoreNumber:INTEGER, Family:STRING, Sales:FLOAT, Onpromotion:INTEGER` - The schema for the BigQuery table.
+
+## Data Transformation Details
+
+The `TransformDate` step converts the date string from the input CSV file to a BigQuery-compatible DATE format. It also handles potential missing values in the `Sales` column by setting them to `None` if they are empty.
+
+## Error Handling
+
+The `parse_csv` function includes a try-except block to handle potential errors during CSV parsing.  Rows that cannot be parsed are skipped.
+
+## Dependencies
+
+The pipeline relies on the following Apache Beam libraries:
+
+*   `apache_beam`
+*   `apache_beam.options.pipeline_options`
+
+It also uses the standard `csv` and `datetime` libraries in Python.
+
+## Notes
+
+*   Ensure that the GCS bucket and BigQuery dataset exist before running the pipeline.
+*   The BigQuery table will be truncated and overwritten each time the pipeline runs due to the `WRITE_TRUNCATE` write disposition.  Consider changing this to `WRITE_APPEND` for incremental updates.
+*   The pipeline assumes that the input CSV file has a header row, which is skipped using the `skip_header_lines=1` option.
