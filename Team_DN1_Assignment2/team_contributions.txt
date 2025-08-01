@@ -1,0 +1,33 @@
+
+Team Contributions – Store Sales Time Series Forecasting Project
+    Contributors - Emmanuel Opoku, Elizabeth Setjawardaja, Senthil Mariappan, Ajay Gopalakrishnan.
+    Meeting time: 5days, with 2hrs on each session.  All of us joined.
+
+Our team of four collaborated closely to complete the end-to-end pipeline project involving data movement, modeling, and business insight generation using the "Store Sales - Time Series Forecasting" dataset from Kaggle. Over the course of the project, we met for two hours each on four separate days, ensuring structured collaboration and even workload distribution.
+
+Collaborative Planning and Setup:
+
+In the initial sessions, the team collectively reviewed the project requirements and clarified the deliverables. We jointly designed the architecture of the data pipeline—from ingesting raw data from Google Cloud Storage (GCS) to loading it into BigQuery tables. We discussed data schema design, table partitioning strategies, and how to optimize queries for downstream modeling.
+
+Each team member played a key role in setting up the GCS buckets, transferring the dataset, and writing the SQL scripts to create and populate BigQuery tables. We divided responsibilities for each of the key datasets (sales, items, stores, etc.) and ensured uniform naming conventions and data quality across all tables.
+
+ML Pipeline and Modeling:
+
+The team worked together to design and build a machine learning pipeline using BigQuery ML. We decided on using a time-series model appropriate for forecasting store-level sales. Each member contributed by writing portions of the SQL used to train and test the model, tune hyperparameters, and evaluate model performance. We conducted joint review sessions to validate feature selection and modeling decisions, ensuring transparency and learning for all members.
+
+Documentation Contributions:
+
+Each individual was responsible for authoring one of the following markdown files: data_exploration.md, pipeline_setup.md, model_results.md, and dive_journey.md. These documents were written based on actual exploratory analysis and implementation work conducted by each team member. We reviewed each other's markdown contributions to ensure consistency in writing style, technical accuracy, and completeness.
+
+- The data_exploration.md file detailed the initial dataset inspection, feature understanding, and identification of missing or outlier values.
+- The pipeline_setup.md document explained the BigQuery table structure, data load scripts, and schema definitions.
+- The model_results.md file captured model evaluation metrics such as RMSE, predictions versus actuals, and insights from error analysis.
+- The dive_journey.md summarized the application of the DIVE method (Discover, Interpret, Validate, Explain) to uncover business-relevant insights.
+
+DIVE Analysis Collaboration:
+
+Our final two sessions were focused on DIVE analysis. We brainstormed insights derived from the model’s predictions, including temporal trends, store-level performance patterns, and potential inventory optimization strategies. All team members contributed their perspectives to the analysis and the creation of the final dive_analysis_report.pdf. The document was peer-reviewed by the entire team before submission.
+
+Conclusion:
+
+Overall, our team demonstrated strong collaboration, clear communication, and a shared commitment to excellence. Each member contributed to both the technical and analytical components of the project. We are proud of the balance we maintained between individual ownership and team synergy throughout the execution of this assignment.
