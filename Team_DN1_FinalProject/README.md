@@ -7,6 +7,9 @@ The goal of this project was to evaluate revenue trends, profitability drivers, 
 Watch the full presentation on YouTube:  
 [Executive Strategy Presentation on E-Commerce Acquisition Analysis](https://youtu.be/IV8R-E7zHfQ)
 
+## GitHub Repository
+You can find the full project and source files here: [GitHub Link](https://github.com/senthil-mariappan-purdue/mgmt-599-dataanaltyics-dn1/tree/main/Team_DN1_FinalProject)
+
 ## 📊 Key Highlights
 - Revenue, cost, and profit trend analysis  
 - Validation of financial drivers and correlations  
